@@ -48,12 +48,14 @@ public class MxeaezShopOverlay extends Overlay
 
 	private final Client client;
 	private final EffectManager effectManager;
+	private final NpcRenameEffect npcRenameEffect;
 
 	@Inject
-	private MxeaezShopOverlay(Client client, EffectManager effectManager)
+	private MxeaezShopOverlay(Client client, EffectManager effectManager, NpcRenameEffect npcRenameEffect)
 	{
 		this.client = client;
 		this.effectManager = effectManager;
+		this.npcRenameEffect = npcRenameEffect;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 		setPriority(OverlayPriority.HIGHEST);
@@ -74,16 +76,12 @@ public class MxeaezShopOverlay extends Overlay
 			fillScreen(graphics, color);
 		}
 
-		// --- NPC rename labels ---
-		GameEffect renameEffect = effectManager.getActive(EffectType.NPC_RENAME);
-		if (renameEffect != null && renameEffect.getParam() != null)
+		// --- NPC rename labels (persistent across sessions) ---
+		if (!npcRenameEffect.isEmpty())
 		{
-			String[] parts = renameEffect.getParam().split(":", 2);
-			if (parts.length == 2)
+			for (java.util.Map.Entry<String, String> entry : npcRenameEffect.getAll().entrySet())
 			{
-				String targetName = parts[0].trim().toLowerCase();
-				String replacement = parts[1].trim();
-				renderNpcLabels(graphics, targetName, replacement);
+				renderNpcLabels(graphics, entry.getKey(), entry.getValue());
 			}
 		}
 

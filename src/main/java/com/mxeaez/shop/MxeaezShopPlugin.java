@@ -36,6 +36,8 @@ import net.runelite.api.Client;
 import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.client.util.Text;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
@@ -103,6 +105,9 @@ public class MxeaezShopPlugin extends Plugin
 	@Inject
 	private SqueakyWeaponEffect squeakyWeaponEffect;
 
+	@Inject
+	private NpcRenameEffect npcRenameEffect;
+
 	private WebSocket pluginSocket = null;
 	private final ScheduledExecutorService reconnectExecutor = Executors.newSingleThreadScheduledExecutor();
 	private volatile long reconnectDelayMs = 1_000;
@@ -113,6 +118,7 @@ public class MxeaezShopPlugin extends Plugin
 	{
 		shuttingDown = false;
 		overlayManager.add(overlay);
+		npcRenameEffect.load();
 		connectWebSocket();
 		log.debug("Mxeaez Shop started");
 	}
@@ -222,9 +228,11 @@ public class MxeaezShopPlugin extends Plugin
 
 		switch (effect.getType())
 		{
+			case NPC_RENAME:
+				applyNpcRename(effect);
+				break;
 			case LIGHTS_OUT:
 			case SCREEN_FLASH:
-			case NPC_RENAME:
 			case DRUNK_WALK:
 				effectManager.activate(effect);
 				break;
@@ -245,6 +253,25 @@ public class MxeaezShopPlugin extends Plugin
 				showChatMessage(effect);
 				break;
 		}
+	}
+
+	private void applyNpcRename(GameEffect effect)
+	{
+		String param = effect.getParam();
+		if (param == null || !param.contains(":"))
+		{
+			log.debug("NpcRename: invalid param '{}'", param);
+			return;
+		}
+		String[] parts = param.split(":", 2);
+		String targetName = parts[0].trim();
+		String newName    = parts[1].trim();
+		if (targetName.isEmpty() || newName.isEmpty())
+		{
+			return;
+		}
+		npcRenameEffect.put(targetName, newName);
+		log.debug("NpcRename: '{}' -> '{}'", targetName, newName);
 	}
 
 	private void applyItemSwap(GameEffect effect)
@@ -298,6 +325,32 @@ public class MxeaezShopPlugin extends Plugin
 		catch (NumberFormatException e)
 		{
 			log.debug("Invalid sound ID: {}", effect.getParam());
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// Menu entry hook — renames NPC in right-click context menu
+	// -----------------------------------------------------------------------
+
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		if (npcRenameEffect.isEmpty())
+		{
+			return;
+		}
+		net.runelite.api.MenuEntry entry = event.getMenuEntry();
+		net.runelite.api.NPC npc = entry.getNpc();
+		if (npc == null)
+		{
+			return;
+		}
+		String cleanName = Text.removeTags(npc.getName() != null ? npc.getName() : "");
+		String newName = npcRenameEffect.getAll().get(cleanName.toLowerCase());
+		if (newName != null)
+		{
+			String target = entry.getTarget();
+			entry.setTarget(target.replace(cleanName, newName));
 		}
 	}
 
