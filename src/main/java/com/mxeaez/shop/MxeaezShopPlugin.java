@@ -36,7 +36,10 @@ import net.runelite.api.Client;
 import net.runelite.api.events.AreaSoundEffectPlayed;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.PlayerChanged;
+import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.client.util.Text;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
@@ -108,6 +111,9 @@ public class MxeaezShopPlugin extends Plugin
 	@Inject
 	private NpcRenameEffect npcRenameEffect;
 
+	@Inject
+	private OutfitSwapEffect outfitSwapEffect;
+
 	private WebSocket pluginSocket = null;
 	private final ScheduledExecutorService reconnectExecutor = Executors.newSingleThreadScheduledExecutor();
 	private volatile long reconnectDelayMs = 1_000;
@@ -137,6 +143,7 @@ public class MxeaezShopPlugin extends Plugin
 		lostBossEffect.despawn();
 		itemSwapEffect.clear();
 		squeakyWeaponEffect.destroy();
+		outfitSwapEffect.clear();
 		log.debug("Mxeaez Shop stopped");
 	}
 
@@ -245,6 +252,13 @@ public class MxeaezShopPlugin extends Plugin
 				break;
 			case SQUEAKY_WEAPON:
 				squeakyWeaponEffect.activate(effect.getDurationMs());
+				showChatMessage(new GameEffect() {{
+					setViewer(effect.getViewer());
+					setParam("Squeaky Weapon activated for " + (effect.getDurationMs() / 1000) + "s!");
+				}});
+				break;
+			case OUTFIT_SWAP:
+				outfitSwapEffect.activate(effect.getParam(), effect.getDurationMs());
 				break;
 			case SOUND_EFFECT:
 				playSoundEffect(effect);
@@ -366,10 +380,40 @@ public class MxeaezShopPlugin extends Plugin
 			return;
 		}
 		net.runelite.api.Actor source = event.getSource();
-		if (source != null && source == client.getLocalPlayer())
+		if (source == null || source == client.getLocalPlayer())
 		{
 			event.consume();
-			squeakyWeaponEffect.playSqueaky();
+		}
+	}
+
+	@Subscribe
+	public void onSoundEffectPlayed(SoundEffectPlayed event)
+	{
+		if (!squeakyWeaponEffect.isActive())
+		{
+			return;
+		}
+		// Attack sounds come through with source == null (server-sent global sounds)
+		net.runelite.api.Actor source = event.getSource();
+		if (source == null || source == client.getLocalPlayer())
+		{
+			event.consume();
+		}
+	}
+
+	@Subscribe
+	public void onHitsplatApplied(HitsplatApplied event)
+	{
+		if (!squeakyWeaponEffect.isActive())
+		{
+			return;
+		}
+		// isMine() = this damage was dealt by the local player.
+		// Also require the target is not the local player so enemy hitsplats on
+		// the player (incoming damage) don't trigger the squeak.
+		if (event.getHitsplat().isMine() && event.getActor() != client.getLocalPlayer())
+		{
+			squeakyWeaponEffect.playSqueaky(client.getTickCount());
 		}
 	}
 
@@ -402,8 +446,11 @@ public class MxeaezShopPlugin extends Plugin
 			lostBossEffect.despawn();
 		}
 
-		// Item Swap: re-applies overrides and reverts expired entries each tick
+	// Item Swap: re-applies overrides and reverts expired entries each tick
 		itemSwapEffect.tick();
+
+		// Outfit Swap: re-applies visual overrides and reverts on expiry each tick
+		outfitSwapEffect.tick();
 
 		// Drunk walk: forcibly override the local player's animation each tick
 		if (effectManager.isActive(EffectType.DRUNK_WALK))
@@ -415,6 +462,28 @@ public class MxeaezShopPlugin extends Plugin
 				localPlayer.setAnimationFrame(0);
 			}
 		}
+	}
+
+	/**
+	 * Fires with priority=1 (before other plugins) whenever the server sends a
+	 * fresh {@link net.runelite.api.PlayerComposition} for a player.  We
+	 * immediately re-apply item-swap overrides on the local player so there is
+	 * no visible flicker between equip and swap — matching the technique used by
+	 * weapon-animation-replacer.
+	 */
+	@Subscribe(priority = 1)
+	public void onPlayerChanged(PlayerChanged event)
+	{
+		if (event.getPlayer() != client.getLocalPlayer())
+		{
+			return;
+		}
+		// Apply item-swap and outfit-swap immediately on each server-sent
+		// PlayerComposition update (priority=1 = before other plugins).
+		// For outfit swap, applyNow() also stores currentActualState so expiry
+		// reverts to exactly what the server knows, not a stale activation snapshot.
+		itemSwapEffect.applyNow(event.getPlayer());
+		outfitSwapEffect.applyNow(event.getPlayer());
 	}
 
 	@Provides

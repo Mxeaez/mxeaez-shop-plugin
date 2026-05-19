@@ -28,34 +28,26 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
-import net.runelite.api.NPC;
-import net.runelite.api.NPCComposition;
-import net.runelite.api.Point;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
-import net.runelite.client.ui.overlay.OverlayUtil;
 
 public class MxeaezShopOverlay extends Overlay
 {
 	private static final Color LIGHTS_OUT_COLOR = new Color(0, 0, 0, 210);
 	private static final Color FLASH_FALLBACK_COLOR = new Color(255, 0, 0, 140);
-	private static final Color NPC_LABEL_COLOR = Color.YELLOW;
 
 	private final Client client;
 	private final EffectManager effectManager;
-	private final NpcRenameEffect npcRenameEffect;
 
 	@Inject
-	private MxeaezShopOverlay(Client client, EffectManager effectManager, NpcRenameEffect npcRenameEffect)
+	private MxeaezShopOverlay(Client client, EffectManager effectManager)
 	{
 		this.client = client;
 		this.effectManager = effectManager;
-		this.npcRenameEffect = npcRenameEffect;
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 		setPriority(OverlayPriority.HIGHEST);
@@ -76,38 +68,7 @@ public class MxeaezShopOverlay extends Overlay
 			fillScreen(graphics, color);
 		}
 
-		// --- NPC rename labels (persistent across sessions) ---
-		if (!npcRenameEffect.isEmpty())
-		{
-			for (java.util.Map.Entry<String, String> entry : npcRenameEffect.getAll().entrySet())
-			{
-				renderNpcLabels(graphics, entry.getKey(), entry.getValue());
-			}
-		}
-
 		return null;
-	}
-
-	private void renderNpcLabels(Graphics2D graphics, String targetName, String replacement)
-	{
-		List<NPC> npcs = client.getNpcs();
-		for (NPC npc : npcs)
-		{
-			NPCComposition comp = npc.getTransformedComposition();
-			if (comp == null)
-			{
-				continue;
-			}
-			String npcName = comp.getName();
-			if (npcName != null && npcName.toLowerCase().equals(targetName))
-			{
-				Point textLocation = npc.getCanvasTextLocation(graphics, replacement, npc.getLogicalHeight() + 40);
-				if (textLocation != null)
-				{
-					OverlayUtil.renderTextLocation(graphics, textLocation, replacement, NPC_LABEL_COLOR);
-				}
-			}
-		}
 	}
 
 	private void fillScreen(Graphics2D graphics, Color color)

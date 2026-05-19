@@ -17,13 +17,11 @@ This plugin is to be used with the [Mxeaez Shop](https://www.twitch.tv/mxeaez) T
 
 | Effect | Description | Duration |
 |---|---|---|
-| Lights Out | Plunges the game into darkness | 15s |
-| Screen Flash | Flashes the screen red | 3s |
-| Drunk Walk | Forces a drunk stagger walk animation | 20s |
-| NPC Rename | Renames a targeted NPC | 30s |
+| NPC Rename | Renames a targeted NPC | Permanent |
 | Lost Boss | Spawns a random OSRS boss that wanders nearby | 60s |
 | Item Swap | Swaps the visual of an equipped item | 60s |
 | Squeaky Weapon | Replaces attack sounds with a squeaky toy | 10s |
+| Outfit Swap | Swaps the visual of an equipped item | 60s |
 
 ## License
 

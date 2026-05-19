@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.PlayerComposition;
+import net.runelite.client.game.ItemManager;
 
 /**
  * Manages one or more concurrent item-swap visual overrides on the local player.
@@ -59,6 +60,9 @@ class ItemSwapEffect
 {
 	@Inject
 	private Client client;
+
+	@Inject
+	private ItemManager itemManager;
 
 	private static class Entry
 	{
@@ -139,10 +143,11 @@ class ItemSwapEffect
 			}
 			else
 			{
-				// Apply: replace any fromItemId slot with toItemId
+				// Apply: replace any fromItemId slot with toItemId (canonicalize for variant-item support)
 				for (int i = 0; i < ids.length; i++)
 				{
-					if (ids[i] == e.fromItemId + PlayerComposition.ITEM_OFFSET)
+					int raw = ids[i] - PlayerComposition.ITEM_OFFSET;
+					if (raw >= 0 && itemManager.canonicalize(raw) == itemManager.canonicalize(e.fromItemId))
 					{
 						ids[i] = e.toItemId + PlayerComposition.ITEM_OFFSET;
 						dirty = true;
@@ -153,6 +158,50 @@ class ItemSwapEffect
 
 		toRemove.forEach(entries::remove);
 
+		if (dirty)
+		{
+			comp.setHash();
+		}
+	}
+
+	/**
+	 * Applies all active (non-expired) swaps to the given player immediately.
+	 * Called from {@code onPlayerChanged} (priority=1) so the swap takes effect
+	 * the instant the server sends a fresh {@link PlayerComposition}, before
+	 * any other plugin or the next game-tick can render the real item.
+	 *
+	 * <p>Uses {@link ItemManager#canonicalize} so cosmetic variants (e.g.
+	 * ornament-kit versions of an item) are treated as the same base item.</p>
+	 */
+	void applyNow(Player player)
+	{
+		if (entries.isEmpty())
+		{
+			return;
+		}
+		PlayerComposition comp = player.getPlayerComposition();
+		if (comp == null)
+		{
+			return;
+		}
+		int[] ids     = comp.getEquipmentIds();
+		boolean dirty = false;
+		for (Entry e : entries.values())
+		{
+			if (!e.isExpired())
+			{
+				for (int i = 0; i < ids.length; i++)
+				{
+					int raw = ids[i] - PlayerComposition.ITEM_OFFSET;
+					if (raw >= 0 && itemManager.canonicalize(raw) == itemManager.canonicalize(e.fromItemId))
+					{
+						ids[i] = e.toItemId + PlayerComposition.ITEM_OFFSET;
+						dirty = true;
+						log.debug("ItemSwap: onPlayerChanged — applied {} -> {} at slot {}", e.fromItemId, e.toItemId, i);
+					}
+				}
+			}
+		}
 		if (dirty)
 		{
 			comp.setHash();
