@@ -252,10 +252,6 @@ public class MxeaezShopPlugin extends Plugin
 				break;
 			case SQUEAKY_WEAPON:
 				squeakyWeaponEffect.activate(effect.getDurationMs());
-				showChatMessage(new GameEffect() {{
-					setViewer(effect.getViewer());
-					setParam("Squeaky Weapon activated for " + (effect.getDurationMs() / 1000) + "s!");
-				}});
 				break;
 			case OUTFIT_SWAP:
 				outfitSwapEffect.activate(effect.getParam(), effect.getDurationMs());

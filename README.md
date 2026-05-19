@@ -21,7 +21,7 @@ This plugin is to be used with the [Mxeaez Shop](https://www.twitch.tv/mxeaez) T
 | Lost Boss | Spawns a random OSRS boss that wanders nearby | 60s |
 | Item Swap | Swaps the visual of an equipped item | 60s |
 | Squeaky Weapon | Replaces attack sounds with a squeaky toy | 10s |
-| Outfit Swap | Swaps the visual of an equipped item | 60s |
+| Outfit Swap | Replaces the visual of your worn outfit | 60s |
 
 ## License
 
