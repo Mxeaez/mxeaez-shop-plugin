@@ -50,7 +50,6 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.ui.overlay.OverlayManager;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -61,28 +60,15 @@ import okhttp3.WebSocketListener;
 @PluginDescriptor(
 	name = "Mxeaez Shop",
 	description = "In-game effects triggered by mxeaez-shop channel point redeems",
-	tags = {"twitch", "shop", "effects", "overlay", "mxeaez"},
-	enabledByDefault = false
+	tags = {"twitch", "shop", "effects", "overlay", "mxeaez"}
 )
 public class MxeaezShopPlugin extends Plugin
 {
-	/**
-	 * Drunk-walk animation ID. The standard "drunk stagger" walk in OSRS.
-	 * Change this via the in-game devtools animation inspector if you want a different one.
-	 */
-	private static final int DRUNK_WALK_ANIM = 1748;
-
 	@Inject
 	private Client client;
 
 	@Inject
 	private MxeaezShopConfig config;
-
-	@Inject
-	private MxeaezShopOverlay overlay;
-
-	@Inject
-	private OverlayManager overlayManager;
 
 	@Inject
 	private EffectManager effectManager;
@@ -123,7 +109,6 @@ public class MxeaezShopPlugin extends Plugin
 	protected void startUp()
 	{
 		shuttingDown = false;
-		overlayManager.add(overlay);
 		npcRenameEffect.load();
 		connectWebSocket();
 		log.debug("Mxeaez Shop started");
@@ -133,7 +118,6 @@ public class MxeaezShopPlugin extends Plugin
 	protected void shutDown()
 	{
 		shuttingDown = true;
-		overlayManager.remove(overlay);
 		if (pluginSocket != null)
 		{
 			pluginSocket.close(1000, "Plugin shut down");
@@ -237,11 +221,6 @@ public class MxeaezShopPlugin extends Plugin
 		{
 			case NPC_RENAME:
 				applyNpcRename(effect);
-				break;
-			case LIGHTS_OUT:
-			case SCREEN_FLASH:
-			case DRUNK_WALK:
-				effectManager.activate(effect);
 				break;
 			case LOST_BOSS:
 				effectManager.activate(effect);
@@ -448,16 +427,6 @@ public class MxeaezShopPlugin extends Plugin
 		// Outfit Swap: re-applies visual overrides and reverts on expiry each tick
 		outfitSwapEffect.tick();
 
-		// Drunk walk: forcibly override the local player's animation each tick
-		if (effectManager.isActive(EffectType.DRUNK_WALK))
-		{
-			net.runelite.api.Player localPlayer = client.getLocalPlayer();
-			if (localPlayer != null)
-			{
-				localPlayer.setAnimation(DRUNK_WALK_ANIM);
-				localPlayer.setAnimationFrame(0);
-			}
-		}
 	}
 
 	/**

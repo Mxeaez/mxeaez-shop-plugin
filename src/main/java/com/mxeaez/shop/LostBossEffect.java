@@ -53,12 +53,6 @@ public class LostBossEffect
 		{  2215,  7016,  7017 }, // General Graardor
 		{  2205,  6965,  6966 }, // Commander Zilyana
 		{  7221, 10690, 10687 }, // Scurrius
-		{  1672,  5479,   813 }, // Ahrim
-		{  1673,  5479,  2065 }, // Dharok
-		{  1674,  5479,   813 }, // Guthan
-		{  1675,  2076,   813 }, // Karil
-		{  1676,  5479,   808 }, // Torag
-		{  1677,  5479,  2061 }, // Verac
 		{  2267,  2849,  2850 }, // Dagannoth Rex
 		{ 11278,  9175,  9177 }, // Nex
 		{  6619,  2769,  2770 }, // Chaos Fanatic
@@ -70,10 +64,8 @@ public class LostBossEffect
 		{  9035,  8416,  8417 }, // Corrupted Hunllef
 		{ 12821, 10878, 10874 }, // Sol Heredit
 		{  7541,  7477,  7473 }, // Tekton
-		{  7563, 13069,  7425 }, // Muttadile
 		{  8359,  8081,  8080 }, // Pestilent Bloat
 		{ 10803,  8341,  8340 }, // Nylocas Vasilias
-		{  8060,  8058,  8058 }, // Xarpus
 		{ 11778,  9737,  9741 }, // Ba-Ba
 		{ 13662,  1660,   808 }, // Durial321
 	};

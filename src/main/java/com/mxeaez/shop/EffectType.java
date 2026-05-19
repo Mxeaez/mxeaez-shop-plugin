@@ -26,10 +26,7 @@ package com.mxeaez.shop;
 
 public enum EffectType
 {
-	LIGHTS_OUT,
-	SCREEN_FLASH,
 	NPC_RENAME,
-	DRUNK_WALK,
 	SOUND_EFFECT,
 	CHAT_MESSAGE,
 	LOST_BOSS,

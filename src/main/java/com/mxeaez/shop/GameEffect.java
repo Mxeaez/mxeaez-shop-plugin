@@ -41,7 +41,6 @@ public class GameEffect
 	/**
 	 * Optional string parameter for this effect. Interpretation depends on type:
 	 * <ul>
-	 *   <li>SCREEN_FLASH   — hex color, e.g. {@code "#ff0000"}</li>
 	 *   <li>NPC_RENAME     — {@code "target:replacement"}, e.g. {@code "Kephri:Brody"}</li>
 	 *   <li>SOUND_EFFECT   — OSRS sound ID as a string, e.g. {@code "3813"}</li>
 	 *   <li>CHAT_MESSAGE   — message text</li>
