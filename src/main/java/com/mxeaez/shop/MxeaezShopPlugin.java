@@ -118,6 +118,7 @@ public class MxeaezShopPlugin extends Plugin
 	protected void shutDown()
 	{
 		shuttingDown = true;
+		reconnectExecutor.shutdownNow();
 		if (pluginSocket != null)
 		{
 			pluginSocket.close(1000, "Plugin shut down");

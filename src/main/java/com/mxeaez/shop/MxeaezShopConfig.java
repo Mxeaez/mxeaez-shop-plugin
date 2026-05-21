@@ -35,6 +35,7 @@ public interface MxeaezShopConfig extends Config
 		keyName = "serverUrl",
 		name = "Server URL",
 		description = "Base URL of the mxeaez-shop EBS server (no trailing slash)",
+		warning = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers",
 		position = 0
 	)
 	default String serverUrl()
@@ -46,6 +47,7 @@ public interface MxeaezShopConfig extends Config
 		keyName = "apiKey",
 		name = "API Key",
 		description = "Shared secret for the plugin WebSocket endpoint — keep this private",
+		warning = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers",
 		secret = true,
 		position = 1
 	)
